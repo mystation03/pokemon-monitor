@@ -6,12 +6,38 @@ const SEARCH_URL = "https://www.walmart.ca/search?q=pokemon+tcg";
 
 async function sendDiscord(product) {
   await axios.post(process.env.WEBHOOK_URL, {
+    content: "@everyone 🚨 RESTOCK",
     embeds: [
       {
         title: product.name,
         url: product.url,
-        description: `💰 $${product.price}\n✅ RESTOCK`,
-        image: { url: product.image }
+        color: 5763719, // blue
+
+        fields: [
+          {
+            name: "💰 Price",
+            value: `$${product.price || "N/A"}`,
+            inline: true
+          },
+          {
+            name: "🏪 Store",
+            value: "Walmart CA",
+            inline: true
+          },
+          {
+            name: "📦 Status",
+            value: "IN STOCK",
+            inline: true
+          }
+        ],
+
+        image: {
+          url: product.image
+        },
+
+        footer: {
+          text: "Pokemon Monitor"
+        }
       }
     ]
   });
