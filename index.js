@@ -105,6 +105,7 @@ return {
   }
 }
 
+console.log("Walmart monitor running...");
 async function monitorWalmart() {
   const cache = loadCache();
   const ids = await getProductIds();
@@ -131,6 +132,8 @@ async function monitorWalmart() {
 
   saveCache(cache);
 }
+
+console.log("Pokemon Center monitor running...");
 async function monitorPokemonCenter(cache, saveCache) {
   try {
     const res = await axios.get("https://www.pokemoncenter.com", {
@@ -181,6 +184,7 @@ async function monitorPokemonCenter(cache, saveCache) {
 
 const { chromium } = require("playwright");
 
+console.log("Costco monitor running...");
 async function sendCostcoEmbed(product) {
   await axios.post(process.env.WEBHOOK_URL, {
     content: "@everyone 🚨 COSTCO RESTOCK",
