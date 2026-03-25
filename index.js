@@ -106,21 +106,23 @@ return {
 }
 console.log("Walmart monitor started");
 
-await axios.post(process.env.WEBHOOK_URL, {
-  content: "🧪 TEST: Walmart monitor started"
-});
-console.log("Walmart monitor running...");
 async function monitorWalmart() {
   const cache = loadCache();
+
+  // ✅ SAFE TEST (inside async function)
+  console.log("Walmart monitor started");
+
+  await axios.post(process.env.WEBHOOK_URL, {
+    content: "🧪 TEST: Walmart monitor started"
+  });
+
   const ids = await getProductIds();
 
   await Promise.all(ids.map(async (id) => {
     const product = await checkProduct(id);
     if (!product) return;
 
-    const prev = cache[id];
-
-    // 🚨 FORCE TEST (safe)
+    // 🚨 FORCE TEST
     await sendDiscord(product);
 
     cache[id] = product.status;
