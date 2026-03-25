@@ -10,10 +10,8 @@ async function sendDiscord(product) {
       {
         title: product.name,
         url: product.url,
-        description: "🆕 Pokémon TCG Product Detected",
-        image: {
-          url: product.image
-        }
+        description: `💰 $${product.price}\n✅ RESTOCK`,
+        image: { url: product.image }
       }
     ]
   });
@@ -28,56 +26,79 @@ function saveCache(data) {
   fs.writeFileSync("cache.json", JSON.stringify(data));
 }
 
-async function monitorWalmart() {
-  const cache = loadCache();
+// 🔥 Extract product IDs from search page
+async function getProductIds() {
+  const res = await axios.get(SEARCH_URL, {
+    headers: { "User-Agent": "Mozilla/5.0" }
+  });
 
+  const $ = cheerio.load(res.data);
+  const ids = [];
+
+  $("a").each((i, el) => {
+    const href = $(el).attr("href");
+
+    if (href && href.includes("/ip/")) {
+      const id = href.split("/ip/")[1];
+      if (id) ids.push(id);
+    }
+  });
+
+  return [...new Set(ids)];
+}
+
+// 🔥 Fetch product data from Walmart API
+async function checkProduct(id) {
   try {
-    const res = await axios.get(SEARCH_URL, {
+    const url = `https://www.walmart.ca/api/product-page/v2/${id}`;
+
+    const res = await axios.get(url, {
       headers: { "User-Agent": "Mozilla/5.0" }
     });
 
-    const $ = cheerio.load(res.data);
+    const data = res.data;
 
-    const products = [];
+    return {
+      id,
+      name: data?.name,
+      price: data?.priceInfo?.currentPrice?.price,
+      image: data?.imageInfo?.thumbnailUrl,
+      status: data?.availabilityStatus,
+      url: `https://www.walmart.ca/en/ip/${id}`
+    };
 
-    $("a").each((i, el) => {
-      const href = $(el).attr("href");
+  } catch {
+    return null;
+  }
+}
 
-      if (href && href.includes("/ip/")) {
-        const fullUrl = "https://www.walmart.ca" + href;
+async function monitorWalmart() {
+  const cache = loadCache();
 
-        const name = $(el).text().trim();
+  const ids = await getProductIds();
 
-        const image =
-          $(el).find("img").attr("src") ||
-          $(el).find("img").attr("data-src");
+  for (const id of ids) {
+    const product = await checkProduct(id);
+    if (!product) continue;
 
-        const id = href.split("/ip/")[1];
+    const prev = cache[id];
 
-        if (name && image) {
-          products.push({
-            id,
-            name,
-            url: fullUrl,
-            image
-          });
-        }
-      }
-    });
-
-    for (const p of products) {
-      if (!cache[p.id]) {
-        cache[p.id] = true;
-
-        await sendDiscord(p);
-      }
+    // FIRST TIME → store only
+    if (!prev) {
+      cache[id] = product.status;
+      continue;
     }
 
-    saveCache(cache);
+    // 🔥 RESTOCK DETECTED
+    if (prev !== "IN_STOCK" && product.status === "IN_STOCK") {
+      await sendDiscord(product);
+    }
 
-  } catch (err) {
-    console.log("Error:", err.message);
+    // update cache
+    cache[id] = product.status;
   }
+
+  saveCache(cache);
 }
 
 monitorWalmart();
