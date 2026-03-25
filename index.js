@@ -103,7 +103,7 @@ async function monitorWalmart() {
 
   const ids = await getProductIds();
 
-  for (const id of ids) {
+  await Promise.all(ids.map(async (id) => {}));
     const product = await checkProduct(id);
     if (!product) continue;
 
