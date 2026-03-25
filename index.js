@@ -129,6 +129,12 @@ async function monitorWalmart() {
 }
 console.log("Pokemon Center monitor running...");
 async function monitorPokemonCenter(cache, saveCache) {
+
+  // 🧪 TEST
+  await axios.post(process.env.WEBHOOK_URL, {
+    content: "🧪 Pokemon Center monitor WORKING"
+  });
+
   try {
     const res = await axios.get("https://www.pokemoncenter.com", {
       validateStatus: () => true,
