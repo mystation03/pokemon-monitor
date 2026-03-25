@@ -199,9 +199,10 @@ async function monitorCostco(cache, saveCache) {
   });
 
   try {
-    await page.goto("https://www.costco.ca/CatalogSearch?keyword=pokemon", {
-      timeout: 15000
-    });
+    await page.goto(url, {
+  waitUntil: "domcontentloaded",
+  timeout: 10000
+});
 
     const content = await page.content();
 
