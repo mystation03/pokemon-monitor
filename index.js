@@ -266,12 +266,13 @@ async function monitorCostco(cache, saveCache) {
 
       const prev = cache[id] || "unknown";
 
-      if (inStock && prev !== "instock") {
-        await sendCostcoEmbed(p);
-        cache[id] = "instock";
-      } else if (!inStock) {
-        cache[id] = "oos";
-      }
+      // 🧪 FORCE TEST
+await sendCostcoEmbed({
+  name: "TEST COSTCO PRODUCT",
+  url: p.url
+});
+
+cache[id] = "instock";
     }
 
     saveCache(cache);
