@@ -2,7 +2,7 @@ name: Pokemon Monitor
 
 on:
   schedule:
-    - cron: "*/2 * * * *"   # runs every 2 minutes
+    - cron: "*/2 * * * *"
   workflow_dispatch:
 
 jobs:
@@ -18,10 +18,11 @@ jobs:
         with:
           node-version: 18
 
-      - - name: Install dependencies
-  run: |
-    npm install
-    npx playwright install --with-deps
+      - name: Install dependencies
+        run: |
+          npm install
+          npx playwright install --with-deps
+
       - name: Run bot
         run: node index.js
         env:
