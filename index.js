@@ -219,11 +219,17 @@ async function sendCostcoEmbed(product) {
     ]
   });
 }
-await axios.post(process.env.WEBHOOK_URL, {
-  content: "🧪 Costco monitor STARTED"
-});
 async function monitorCostco(cache, saveCache) {
-  const browser = await chromium.launch({ headless: true });
+
+  // ✅ MUST be inside the function
+  await axios.post(process.env.WEBHOOK_URL, {
+    content: "🧪 Costco monitor STARTED"
+  });
+
+  const browser = await chromium.launch({
+    headless: true,
+    args: ["--no-sandbox", "--disable-setuid-sandbox"]
+  });
 
   const context = await browser.newContext({
     userAgent: "Mozilla/5.0"
@@ -247,38 +253,7 @@ async function monitorCostco(cache, saveCache) {
       timeout: 10000
     });
 
-    // 🔥 Grab product cards
-    const products = await page.$$eval("a[href*='/p/']", items =>
-      items.map(el => ({
-        url: el.href,
-        name: el.innerText
-      }))
-    );
-
-    for (const p of products) {
-      const id = p.url;
-
-      await page.goto(p.url, { waitUntil: "domcontentloaded", timeout: 10000 });
-
-      const content = await page.content();
-
-      // ✅ REAL STOCK CHECK
-      const inStock =
-        content.includes("Add to Cart") ||
-        content.includes("Add to basket");
-
-      const prev = cache[id] || "unknown";
-
-      // 🧪 FORCE TEST
-await sendCostcoEmbed({
-  name: "TEST COSTCO PRODUCT",
-  url: p.url
-});
-
-cache[id] = "instock";
-    }
-
-    saveCache(cache);
+    console.log("Costco page loaded");
 
   } catch (err) {
     console.log("Costco error");
