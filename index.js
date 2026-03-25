@@ -104,7 +104,11 @@ return {
     return null;
   }
 }
+console.log("Walmart monitor started");
 
+await axios.post(process.env.WEBHOOK_URL, {
+  content: "🧪 TEST: Walmart monitor started"
+});
 console.log("Walmart monitor running...");
 async function monitorWalmart() {
   const cache = loadCache();
