@@ -1,4 +1,4 @@
-import axios from "axios";
+const axios = require("axios");
 
 async function test() {
   await axios.post(process.env.WEBHOOK_URL, {
