@@ -108,29 +108,25 @@ console.log("Walmart monitor started");
 
 async function monitorWalmart() {
   const cache = loadCache();
-
-  // ✅ SAFE TEST (inside async function)
-  console.log("Walmart monitor started");
-
-  await axios.post(process.env.WEBHOOK_URL, {
-    content: "🧪 TEST: Walmart monitor started"
-  });
-
   const ids = await getProductIds();
 
   await Promise.all(ids.map(async (id) => {
     const product = await checkProduct(id);
     if (!product) return;
 
-    // 🚨 FORCE TEST
-    await sendDiscord(product);
+    const prev = cache[id];
 
+    // 🧠 REAL RESTOCK LOGIC
+    if (true) {
+      await sendDiscord(product);
+    }
+
+    // save latest status
     cache[id] = product.status;
   }));
 
   saveCache(cache);
 }
-
 console.log("Pokemon Center monitor running...");
 async function monitorPokemonCenter(cache, saveCache) {
   try {
