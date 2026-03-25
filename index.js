@@ -116,8 +116,9 @@ async function monitorWalmart() {
 
   const prev = cache[id];
 
-  // 🚨 FORCE TEST (safe version)
+  // if (prev !== "IN_STOCK" && product.status === "IN_STOCK") {
   await sendDiscord(product);
+}
 
   cache[id] = product.status;
 }));
