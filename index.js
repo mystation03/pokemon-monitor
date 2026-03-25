@@ -219,6 +219,9 @@ async function sendCostcoEmbed(product) {
     ]
   });
 }
+await axios.post(process.env.WEBHOOK_URL, {
+  content: "🧪 Costco monitor STARTED"
+});
 async function monitorCostco(cache, saveCache) {
   const browser = await chromium.launch({ headless: true });
 
