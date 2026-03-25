@@ -122,8 +122,7 @@ async function monitorWalmart() {
       return;
     }
 
-    // 🔥 restock detection
-    if (prev !== "IN_STOCK" && product.status === "IN_STOCK") {
+    // 🚨 FORCE TEST
       await sendDiscord(product);
     }
 
