@@ -101,37 +101,57 @@ async function monitorWalmart() {
   saveCache(cache);
 }
 
-async function monitorPokemonCenter() {
+async function monitorPokemonCenter(cache, saveCache) {
   try {
     const res = await axios.get("https://www.pokemoncenter.com", {
       validateStatus: () => true,
-      headers: {
-        "User-Agent": "Mozilla/5.0"
-      }
+      headers: { "User-Agent": "Mozilla/5.0" }
     });
 
     const body = typeof res.data === "string" ? res.data : "";
 
-    // 🔒 High Security Detection
+    let state = "normal";
+
     if (res.status === 403 || res.status === 503 || body.includes("checking your browser")) {
-      await axios.post(process.env.WEBHOOK_URL, {
-        content: "🔒 Pokémon Center HIGH SECURITY detected"
-      });
+      state = "security";
+    } else if (body.includes("queue") || body.includes("line") || body.includes("waiting")) {
+      state = "queue";
     }
 
-    // ⏳ Queue Detection
-    if (body.includes("queue") || body.includes("line") || body.includes("waiting room")) {
-      await axios.post(process.env.WEBHOOK_URL, {
-        content: "⏳ Pokémon Center QUEUE is live"
-      });
+    const prev = cache["pokemon_center"] || "normal";
+
+    // 🔥 Only alert on change
+    if (state !== prev) {
+      if (state === "queue") {
+        await axios.post(process.env.WEBHOOK_URL, {
+          content: "@everyone ⏳ Pokémon Center QUEUE is live!"
+        });
+      }
+
+      if (state === "security") {
+        await axios.post(process.env.WEBHOOK_URL, {
+          content: "@everyone 🔒 Pokémon Center HIGH SECURITY!"
+        });
+      }
+
+      if (state === "normal") {
+        await axios.post(process.env.WEBHOOK_URL, {
+          content: "✅ Pokémon Center back to normal"
+        });
+      }
     }
+
+    cache["pokemon_center"] = state;
+    saveCache(cache);
 
   } catch (err) {
     console.log("Pokemon Center error");
   }
 }
-
 (async () => {
+  const cache = loadCache();
+
   await monitorWalmart();
-  await monitorPokemonCenter();
+
+  await monitorPokemonCenter(cache, saveCache);
 })();
