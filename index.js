@@ -174,10 +174,61 @@ async function monitorPokemonCenter(cache, saveCache) {
     console.log("Pokemon Center error");
   }
 }
-(async () => {
+
+const { chromium } = require("playwright");
+
+async function monitorCostco(cache, saveCache) {
+  const browser = await chromium.launch({
+    headless: true
+  });
+
+  const context = await browser.newContext({
+    userAgent: "Mozilla/5.0"
+  });
+
+  const page = await context.newPage();
+
+  // 🔥 SPEED BOOST: block useless resources
+  await page.route("**/*", route => {
+    const type = route.request().resourceType();
+    if (["image", "stylesheet", "font"].includes(type)) {
+      route.abort();
+    } else {
+      route.continue();
+    }
+  });
+
+  try {
+    await page.goto("https://www.costco.ca/CatalogSearch?keyword=pokemon", {
+      timeout: 15000
+    });
+
+    const content = await page.content();
+
+    // detect products
+    if (content.includes("pokemon")) {
+      if (!cache["costco_seen"]) {
+        cache["costco_seen"] = true;
+
+        await axios.post(process.env.WEBHOOK_URL, {
+          content: "@everyone 🛒 Costco Pokémon product detected!"
+        });
+      }
+    }
+
+    saveCache(cache);
+
+  } catch (err) {
+    console.log("Costco error");
+  }
+
+  await browser.close();
+}
+((async () => {
   const cache = loadCache();
 
   await monitorWalmart();
-
   await monitorPokemonCenter(cache, saveCache);
+  await monitorCostco(cache, saveCache);
+
 })();
