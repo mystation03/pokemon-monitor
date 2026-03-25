@@ -111,17 +111,17 @@ async function monitorWalmart() {
   const ids = await getProductIds();
 
   await Promise.all(ids.map(async (id) => {
-  const product = await checkProduct(id);
-  if (!product) return;
+    const product = await checkProduct(id);
+    if (!product) return;
 
-  const prev = cache[id];
+    const prev = cache[id];
 
-  // if (prev !== "IN_STOCK" && product.status === "IN_STOCK") {
-  await sendDiscord(product);
-}
+    // 🚨 FORCE TEST (safe)
+    await sendDiscord(product);
 
-  cache[id] = product.status;
-}));
+    cache[id] = product.status;
+  }));
+
   saveCache(cache);
 }
 
