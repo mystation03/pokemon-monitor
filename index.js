@@ -87,7 +87,7 @@ async function checkProduct(id) {
    const data = res.data;
 
 // 🔥 FILTER: Only Walmart (not third-party sellers)
-if (!data?.sellerDisplayName?.includes("Walmart")) {
+if (!data?.sellerDisplayName?.toLowerCase().includes("walmart")) {
   return null;
 }
 
@@ -107,33 +107,30 @@ return {
 
 async function monitorWalmart() {
   const cache = loadCache();
-
   const ids = await getProductIds();
 
-  await Promise.all(ids.map(async (id) => {}));
+  await Promise.all(ids.map(async (id) => {
     const product = await checkProduct(id);
-    if (!product) continue;
+    if (!product) return;
 
     const prev = cache[id];
 
-    // FIRST TIME → store only
+    // first time → store only
     if (!prev) {
       cache[id] = product.status;
-      continue;
+      return;
     }
 
-    // 🔥 RESTOCK DETECTED
+    // 🔥 restock detection
     if (prev !== "IN_STOCK" && product.status === "IN_STOCK") {
       await sendDiscord(product);
     }
 
-    // update cache
     cache[id] = product.status;
-  }
+  }));
 
   saveCache(cache);
 }
-
 async function monitorPokemonCenter(cache, saveCache) {
   try {
     const res = await axios.get("https://www.pokemoncenter.com", {
@@ -287,6 +284,9 @@ async function monitorCostco(cache, saveCache) {
 
   await browser.close();
 }
+  (async () => {
+  const cache = loadCache();
+
   await monitorWalmart();
   await monitorPokemonCenter(cache, saveCache);
   await monitorCostco(cache, saveCache);
