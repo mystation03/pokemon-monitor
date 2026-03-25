@@ -18,9 +18,10 @@ jobs:
         with:
           node-version: 18
 
-      - name: Install dependencies
-        run: npm install
-
+      - - name: Install dependencies
+  run: |
+    npm install
+    npx playwright install --with-deps
       - name: Run bot
         run: node index.js
         env:
