@@ -221,11 +221,6 @@ async function sendCostcoEmbed(product) {
 }
 async function monitorCostco(cache, saveCache) {
 
-  // ✅ MUST be inside the function
-  await axios.post(process.env.WEBHOOK_URL, {
-    content: "🧪 Costco monitor STARTED"
-  });
-
   const browser = await chromium.launch({
     headless: true,
     args: ["--no-sandbox", "--disable-setuid-sandbox"]
@@ -237,7 +232,7 @@ async function monitorCostco(cache, saveCache) {
 
   const page = await context.newPage();
 
-  // 🚀 SPEED: block heavy resources
+  // 🚀 Block heavy stuff
   await page.route("**/*", route => {
     const type = route.request().resourceType();
     if (["image", "stylesheet", "font"].includes(type)) {
@@ -250,10 +245,25 @@ async function monitorCostco(cache, saveCache) {
   try {
     await page.goto("https://www.costco.ca/CatalogSearch?keyword=pokemon", {
       waitUntil: "domcontentloaded",
-      timeout: 10000
+      timeout: 15000
     });
 
-    console.log("Costco page loaded");
+    const html = await page.content();
+
+    // 🔥 SIMPLE + RELIABLE DETECTION
+    if (html.toLowerCase().includes("pokemon")) {
+
+      const prev = cache["costco_pokemon"] || false;
+
+      if (!prev) {
+        await axios.post(process.env.WEBHOOK_URL, {
+          content: "@everyone 🛒 Costco Pokémon products detected!\nhttps://www.costco.ca/CatalogSearch?keyword=pokemon"
+        });
+      }
+
+      cache["costco_pokemon"] = true;
+      saveCache(cache);
+    }
 
   } catch (err) {
     console.log("Costco error");
