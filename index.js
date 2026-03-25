@@ -11,7 +11,7 @@ async function sendDiscord(product) {
       {
         title: product.name,
         url: product.url,
-        color: 5763719, // blue
+        color: 3066993,
 
         fields: [
           {
@@ -21,7 +21,7 @@ async function sendDiscord(product) {
           },
           {
             name: "🏪 Store",
-            value: "Walmart CA",
+            value: "Walmart Canada",
             inline: true
           },
           {
@@ -36,8 +36,10 @@ async function sendDiscord(product) {
         },
 
         footer: {
-          text: "Pokemon Monitor"
-        }
+          text: "Rattle-Style Monitor • GitHub System"
+        },
+
+        timestamp: new Date()
       }
     ]
   });
@@ -182,10 +184,48 @@ async function monitorPokemonCenter(cache, saveCache) {
 
 const { chromium } = require("playwright");
 
-async function monitorCostco(cache, saveCache) {
-  const browser = await chromium.launch({
-    headless: true
+async function sendCostcoEmbed(product) {
+  await axios.post(process.env.WEBHOOK_URL, {
+    content: "@everyone 🚨 COSTCO RESTOCK",
+    embeds: [
+      {
+        title: product.name || "Pokemon Product",
+        url: product.url,
+        color: 15158332,
+
+        fields: [
+          {
+            name: "🏪 Store",
+            value: "Costco Canada",
+            inline: true
+          },
+          {
+            name: "📦 Status",
+            value: "IN STOCK",
+            inline: true
+          },
+          {
+            name: "⚡ Monitor",
+            value: "Pokemon Restock",
+            inline: true
+          }
+        ],
+
+        thumbnail: {
+          url: "https://upload.wikimedia.org/wikipedia/commons/1/1b/Costco_Wholesale_logo_2010-10-26.svg"
+        },
+
+        footer: {
+          text: "Rattle-Style Monitor • GitHub System"
+        },
+
+        timestamp: new Date()
+      }
+    ]
   });
+}
+async function monitorCostco(cache, saveCache) {
+  const browser = await chromium.launch({ headless: true });
 
   const context = await browser.newContext({
     userAgent: "Mozilla/5.0"
@@ -193,7 +233,7 @@ async function monitorCostco(cache, saveCache) {
 
   const page = await context.newPage();
 
-  // 🔥 SPEED BOOST: block useless resources
+  // 🚀 SPEED: block heavy resources
   await page.route("**/*", route => {
     const type = route.request().resourceType();
     if (["image", "stylesheet", "font"].includes(type)) {
@@ -204,21 +244,38 @@ async function monitorCostco(cache, saveCache) {
   });
 
   try {
-    await page.goto(url, {
-  waitUntil: "domcontentloaded",
-  timeout: 10000
-});
+    await page.goto("https://www.costco.ca/CatalogSearch?keyword=pokemon", {
+      waitUntil: "domcontentloaded",
+      timeout: 10000
+    });
 
-    const content = await page.content();
+    // 🔥 Grab product cards
+    const products = await page.$$eval("a[href*='/p/']", items =>
+      items.map(el => ({
+        url: el.href,
+        name: el.innerText
+      }))
+    );
 
-    // detect products
-    if (content.includes("pokemon")) {
-      if (!cache["costco_seen"]) {
-        cache["costco_seen"] = true;
+    for (const p of products) {
+      const id = p.url;
 
-        await axios.post(process.env.WEBHOOK_URL, {
-          content: "@everyone 🛒 Costco Pokémon product detected!"
-        });
+      await page.goto(p.url, { waitUntil: "domcontentloaded", timeout: 10000 });
+
+      const content = await page.content();
+
+      // ✅ REAL STOCK CHECK
+      const inStock =
+        content.includes("Add to Cart") ||
+        content.includes("Add to basket");
+
+      const prev = cache[id] || "unknown";
+
+      if (inStock && prev !== "instock") {
+        await sendCostcoEmbed(p);
+        cache[id] = "instock";
+      } else if (!inStock) {
+        cache[id] = "oos";
       }
     }
 
@@ -230,9 +287,6 @@ async function monitorCostco(cache, saveCache) {
 
   await browser.close();
 }
-((async () => {
-  const cache = loadCache();
-
   await monitorWalmart();
   await monitorPokemonCenter(cache, saveCache);
   await monitorCostco(cache, saveCache);
