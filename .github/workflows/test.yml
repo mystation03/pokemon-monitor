@@ -3,7 +3,7 @@ const axios = require("axios");
 async function test() {
   console.log("Sending test message...");
 
-  await axios.post(process.env.WEBHOOK_URL, {
+  await axios.post(process.env.WEBHOOK_URL), {
     content: "🧪 TEST MESSAGE — Discord is working"
   });
 
