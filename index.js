@@ -101,4 +101,37 @@ async function monitorWalmart() {
   saveCache(cache);
 }
 
-monitorWalmart();
+async function monitorPokemonCenter() {
+  try {
+    const res = await axios.get("https://www.pokemoncenter.com", {
+      validateStatus: () => true,
+      headers: {
+        "User-Agent": "Mozilla/5.0"
+      }
+    });
+
+    const body = typeof res.data === "string" ? res.data : "";
+
+    // 🔒 High Security Detection
+    if (res.status === 403 || res.status === 503 || body.includes("checking your browser")) {
+      await axios.post(process.env.WEBHOOK_URL, {
+        content: "🔒 Pokémon Center HIGH SECURITY detected"
+      });
+    }
+
+    // ⏳ Queue Detection
+    if (body.includes("queue") || body.includes("line") || body.includes("waiting room")) {
+      await axios.post(process.env.WEBHOOK_URL, {
+        content: "⏳ Pokémon Center QUEUE is live"
+      });
+    }
+
+  } catch (err) {
+    console.log("Pokemon Center error");
+  }
+}
+
+(async () => {
+  await monitorWalmart();
+  await monitorPokemonCenter();
+})();
