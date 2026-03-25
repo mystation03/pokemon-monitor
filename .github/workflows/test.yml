@@ -1,1 +1,27 @@
-- run: npm install axios cheerio
+name: Pokemon Monitor
+
+on:
+  schedule:
+    - cron: "*/2 * * * *"   # runs every 2 minutes
+  workflow_dispatch:
+
+jobs:
+  run-monitor:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v3
+
+      - name: Setup Node
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18
+
+      - name: Install dependencies
+        run: npm install axios cheerio
+
+      - name: Run bot
+        run: node index.js
+        env:
+          WEBHOOK_URL: ${{ secrets.WEBHOOK_URL }}
