@@ -19,7 +19,7 @@ jobs:
           node-version: 18
 
       - name: Install dependencies
-        run: npm install axios cheerio
+        run: npm install
 
       - name: Run bot
         run: node index.js
