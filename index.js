@@ -82,16 +82,21 @@ async function checkProduct(id) {
       headers: { "User-Agent": "Mozilla/5.0" }
     });
 
-    const data = res.data;
+   const data = res.data;
 
-    return {
-      id,
-      name: data?.name,
-      price: data?.priceInfo?.currentPrice?.price,
-      image: data?.imageInfo?.thumbnailUrl,
-      status: data?.availabilityStatus,
-      url: `https://www.walmart.ca/en/ip/${id}`
-    };
+// 🔥 FILTER: Only Walmart (not third-party sellers)
+if (!data?.sellerDisplayName?.includes("Walmart")) {
+  return null;
+}
+
+return {
+  id,
+  name: data?.name,
+  price: data?.priceInfo?.currentPrice?.price,
+  image: data?.imageInfo?.thumbnailUrl,
+  status: data?.availabilityStatus,
+  url: `https://www.walmart.ca/en/ip/${id}`
+};
 
   } catch {
     return null;
