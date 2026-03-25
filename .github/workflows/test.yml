@@ -1,13 +1,27 @@
-const axios = require("axios");
+name: Pokemon Monitor
 
-async function test() {
-  console.log("Sending test message...");
+on:
+  schedule:
+    - cron: "*/2 * * * *"   # every 2 minutes
+  workflow_dispatch:
 
-  await axios.post(process.env.WEBHOOK_URL), {
-    content: "🧪 TEST MESSAGE — Discord is working"
-  });
+jobs:
+  run-monitor:
+    runs-on: ubuntu-latest
 
-  console.log("Sent!");
-}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
 
-test();
+      - name: Install Node
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18
+
+      - name: Install deps
+        run: npm install
+
+      - name: Run monitor
+        run: node index.js
+        env:
+          WEBHOOK_URL: ${{ secrets.WEBHOOK_URL }}
