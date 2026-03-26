@@ -114,8 +114,7 @@ console.log("Walmart monitor started");
 async function monitorWalmart() {
   const cache = loadCache();
 
-  // 🔁 run multiple quick checks
-  for (let i = 0; i < 5; i++)
+  for (let i = 0; i < 5; i++) {
     console.log(`Walmart check ${i + 1}`);
 
     const ids = await getProductIds();
@@ -145,7 +144,7 @@ async function monitorWalmart() {
       cache[id] = product.status;
     }));
 
-    // ⏱️ wait ~3 seconds between checks
+    // wait 3 seconds
     await new Promise(res => setTimeout(res, 3000));
   }
 
