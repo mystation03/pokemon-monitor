@@ -143,7 +143,9 @@ async function monitorPokemonCenter(cache, saveCache) {
     if (
       res.status === 403 ||
       res.status === 503 ||
-      body.includes("checking your browser")
+      body.includes("checking your browser") ||
+body.includes("cf-challenge") ||
+body.includes("attention required")
     ) {
       state = "security";
     }
@@ -151,8 +153,10 @@ async function monitorPokemonCenter(cache, saveCache) {
     // ⏳ Queue detection
     else if (
       body.includes("queue") ||
-      body.includes("line") ||
-      body.includes("waiting room")
+body.includes("line") ||
+body.includes("waiting room") ||
+body.includes("you are in line") ||
+body.includes("please wait")
     ) {
       state = "queue";
     }
@@ -163,23 +167,48 @@ async function monitorPokemonCenter(cache, saveCache) {
     if (state !== prev) {
 
       if (state === "queue") {
-        await axios.post(process.env.WEBHOOK_URL, {
-          content: "@everyone ⏳ Pokémon Center QUEUE is live!"
-        });
+  await axios.post(process.env.WEBHOOK_URL, {
+    content: "@everyone",
+    embeds: [
+      {
+        title: "⏳ Pokémon Center Queue",
+        description: "Queue is live!",
+        color: 16776960,
+        footer: { text: "Pokemon Monitor" },
+        timestamp: new Date()
       }
+    ]
+  });
+}
 
-      if (state === "security") {
-        await axios.post(process.env.WEBHOOK_URL, {
-          content: "@everyone 🔒 Pokémon Center HIGH SECURITY!"
-        });
+     if (state === "queue") {
+  await axios.post(process.env.WEBHOOK_URL, {
+    content: "@everyone",
+    embeds: [
+      {
+        title: "⏳ Pokémon Center Queue",
+        description: "Queue is live!",
+        color: 16776960,
+        footer: { text: "Pokemon Monitor" },
+        timestamp: new Date()
       }
+    ]
+  });
+}
 
       if (state === "normal") {
-        await axios.post(process.env.WEBHOOK_URL, {
-          content: "✅ Pokémon Center back to normal"
-        });
+  await axios.post(process.env.WEBHOOK_URL, {
+    embeds: [
+      {
+        title: "✅ Pokémon Center Normal",
+        description: "Site is back to normal",
+        color: 65280,
+        footer: { text: "Pokemon Monitor" },
+        timestamp: new Date()
       }
-    }
+    ]
+  });
+}
 
     // save state
     cache["pokemon_center"] = state;
