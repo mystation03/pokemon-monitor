@@ -129,8 +129,13 @@ async function monitorWalmart() {
       cache[id] = product.status;
     }));
 
-    await new Promise(res => setTimeout(res, 2000));
-  }
+    await new Promise(res => setTimeout(res, 1000));
+
+const confirm = await checkProduct(id);
+
+if (!confirm || !["IN_STOCK", "AVAILABLE"].includes(confirm.status)) {
+  return;
+}
 
   saveCache(cache);
 }
