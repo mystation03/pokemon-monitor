@@ -26,28 +26,30 @@ async function monitor() {
     res.status === 403 ||
     res.status === 503 ||
     body.includes("checking your browser") ||
-    body.includes("cf-challenge")
+    body.includes("cf-challenge") ||
+    body.includes("attention required")
   ) state = "security";
 
   else if (
     body.includes("queue") ||
-    body.includes("waiting room")
+    body.includes("waiting room") ||
+    body.includes("you are in line")
   ) state = "queue";
 
   const prev = cache.pc || "normal";
 
   if (state !== prev) {
-    let msg = "";
+    let title = "";
 
-    if (state === "queue") msg = "⏳ Pokémon Center QUEUE";
-    if (state === "security") msg = "🔒 Pokémon Center SECURITY";
-    if (state === "normal") msg = "✅ Pokémon Center NORMAL";
+    if (state === "queue") title = "⏳ Queue Detected";
+    if (state === "security") title = "🔒 High Security";
+    if (state === "normal") title = "✅ Back to Normal";
 
     await axios.post(process.env.WEBHOOK_URL, {
       content: "@everyone",
       embeds: [
         {
-          title: msg,
+          title,
           color: state === "security" ? 16711680 : 16776960,
           timestamp: new Date()
         }
