@@ -87,7 +87,10 @@ async function checkProduct(id) {
    const data = res.data;
 
 // 🔥 FILTER: Only Walmart (not third-party sellers)
-if (!data?.sellerDisplayName?.toLowerCase().includes("walmart")) {
+if (
+  !data?.sellerDisplayName ||
+  !data.sellerDisplayName.toLowerCase().includes("walmart")
+) {
   return null;
 }
 
