@@ -85,6 +85,8 @@ async function checkProduct(id) {
     });
 
    const data = res.data;
+    const fallbackStock =
+  data?.addToCart?.buttonState === "ENABLED";
 
 // 🔥 FILTER: Only Walmart (not third-party sellers)
 if (
