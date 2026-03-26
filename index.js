@@ -129,32 +129,39 @@ async function monitorWalmart() {
 }
 console.log("Pokemon Center monitor running...");
 async function monitorPokemonCenter(cache, saveCache) {
-
-  // 🧪 TEST
-  await axios.post(process.env.WEBHOOK_URL, {
-    content: "🧪 Pokemon Center monitor WORKING"
-  });
-
   try {
     const res = await axios.get("https://www.pokemoncenter.com", {
       validateStatus: () => true,
       headers: { "User-Agent": "Mozilla/5.0" }
     });
 
-    const body = typeof res.data === "string" ? res.data : "";
+    const body = typeof res.data === "string" ? res.data.toLowerCase() : "";
 
     let state = "normal";
 
-    if (res.status === 403 || res.status === 503 || body.includes("checking your browser")) {
+    // 🔒 High security detection
+    if (
+      res.status === 403 ||
+      res.status === 503 ||
+      body.includes("checking your browser")
+    ) {
       state = "security";
-    } else if (body.includes("queue") || body.includes("line") || body.includes("waiting")) {
+    }
+
+    // ⏳ Queue detection
+    else if (
+      body.includes("queue") ||
+      body.includes("line") ||
+      body.includes("waiting room")
+    ) {
       state = "queue";
     }
 
     const prev = cache["pokemon_center"] || "normal";
 
-    // 🔥 Only alert on change
+    // 🚨 ONLY alert on change (no spam)
     if (state !== prev) {
+
       if (state === "queue") {
         await axios.post(process.env.WEBHOOK_URL, {
           content: "@everyone ⏳ Pokémon Center QUEUE is live!"
@@ -174,6 +181,7 @@ async function monitorPokemonCenter(cache, saveCache) {
       }
     }
 
+    // save state
     cache["pokemon_center"] = state;
     saveCache(cache);
 
@@ -181,7 +189,7 @@ async function monitorPokemonCenter(cache, saveCache) {
     console.log("Pokemon Center error");
   }
 }
-
+    
 const { chromium } = require("playwright");
 
 console.log("Costco monitor running...");
