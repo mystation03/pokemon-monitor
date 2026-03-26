@@ -117,9 +117,9 @@ async function monitorWalmart() {
     const prev = cache[id];
 
     // 🧠 REAL RESTOCK LOGIC
-    if (prev !== "IN_STOCK" && product.status === "IN_STOCK") {
-      await sendDiscord(product);
-    }
+    if (!prev && product.status === "IN_STOCK") {
+  await sendDiscord(product); // NEW product alert
+}
 
     // save latest status
     cache[id] = product.status;
