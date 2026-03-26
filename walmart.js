@@ -13,24 +13,34 @@ function saveCache(data) {
   fs.writeFileSync("cache.json", JSON.stringify(data));
 }
 
-async function sendDiscord(product) {
+async function sendDiscord(product, type) {
   await axios.post(process.env.WEBHOOK_URL, {
     content: "@everyone",
     embeds: [
       {
-        title: product.name,
+        title: `${type === "NEW" ? "🆕 NEW" : type === "LOW" ? "⚠️ LOW STOCK" : "🔁 RESTOCK"} — ${product.name}`,
         url: product.url,
-        color: 3066993,
-        thumbnail: {
-          url: "https://upload.wikimedia.org/wikipedia/commons/c/ca/Walmart_logo.svg"
+        color: type === "NEW" ? 3447003 : 3066993,
+
+        author: {
+          name: "Walmart Monitor",
+          icon_url: "https://upload.wikimedia.org/wikipedia/commons/c/ca/Walmart_logo.svg"
         },
+
         fields: [
           { name: "💰 Price", value: `$${product.price || "N/A"}`, inline: true },
-          { name: "🏪 Store", value: "Walmart Canada", inline: true },
-          { name: "📦 Status", value: "IN STOCK", inline: true }
+          { name: "🏪 Store", value: "Walmart CA", inline: true },
+          { name: "⚡ Monitor", value: "Pokemon", inline: true }
         ],
-        image: { url: product.image },
-        footer: { text: "Pokemon Monitor" },
+
+        image: {
+          url: product.image || "https://via.placeholder.com/300"
+        },
+
+        footer: {
+          text: "Pokemon Monitor • Walmart"
+        },
+
         timestamp: new Date()
       }
     ]
@@ -91,6 +101,8 @@ async function monitorWalmart() {
   const cache = loadCache();
 
   for (let i = 0; i < 6; i++) {
+    console.log(`Walmart check ${i + 1}`);
+
     const ids = await getProductIds();
 
     await Promise.all(ids.map(async (id) => {
@@ -99,12 +111,14 @@ async function monitorWalmart() {
 
       const name = product.name.toLowerCase();
 
-      // 🔥 RATTLE FILTER
+      // 🔥 FILTER
       if (
         !name.includes("elite trainer") &&
         !name.includes("etb") &&
         !name.includes("ultra premium") &&
-        !name.includes("booster box")
+        !name.includes("booster box") &&
+        !name.includes("collection") &&
+        !name.includes("premium")
       ) return;
 
       const prev = cache[id];
@@ -113,8 +127,7 @@ async function monitorWalmart() {
       if (cache[id] === "ALERTED") return;
 
       if (!prev && isInStock) {
-        await sendDiscord(product);
-        cache[id] = "ALERTED";
+        await confirmAndSend(id, product, "NEW", cache);
       }
 
       if (
@@ -122,22 +135,27 @@ async function monitorWalmart() {
         !["IN_STOCK", "AVAILABLE", "LIMITED_STOCK"].includes(prev) &&
         isInStock
       ) {
-        await sendDiscord(product);
-        cache[id] = "ALERTED";
+        await confirmAndSend(id, product, "RESTOCK", cache);
       }
 
       cache[id] = product.status;
     }));
 
-    await new Promise(res => setTimeout(res, 1000));
-
-const confirm = await checkProduct(id);
-
-if (!confirm || !["IN_STOCK", "AVAILABLE"].includes(confirm.status)) {
-  return;
-}
+    await new Promise(res => setTimeout(res, 2000));
+  }
 
   saveCache(cache);
+}
+
+async function confirmAndSend(id, product, type, cache) {
+  await new Promise(res => setTimeout(res, 1000));
+
+  const confirm = await checkProduct(id);
+
+  if (!confirm || !["IN_STOCK", "AVAILABLE"].includes(confirm.status)) return;
+
+  await sendDiscord(product, type);
+  cache[id] = "ALERTED";
 }
 
 monitorWalmart();
