@@ -42,8 +42,9 @@ async function monitorCostco() {
     const html = await page.content();
 
     if (
-      html.includes("Add to cart") ||
-      html.includes("Ajouter au panier")
+       html.includes("Add to cart") ||
+  html.includes("Ajouter au panier") ||
+  html.includes("data-add-to-cart");
     ) {
       await send(p);
     }
