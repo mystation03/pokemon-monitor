@@ -119,13 +119,30 @@ async function monitorWalmart() {
 
     const prev = cache[id];
 
-    // 🧠 REAL RESTOCK LOGIC
-    if (!prev && product.status === "IN_STOCK") {
+    const isInStock = ["IN_STOCK", "AVAILABLE", "LIMITED_STOCK"].includes(product.status);
+
+// NEW product
+if (!prev && isInStock) {
   await sendDiscord(product);
 }
 
-// RESTOCK (OOS → IN STOCK)
-if (prev && prev !== "IN_STOCK" && product.status === "IN_STOCK") {
+// RESTOCK
+if (prev && !["IN_STOCK", "AVAILABLE", "LIMITED_STOCK"].includes(prev) && isInStock) {
+  await sendDiscord(product);
+}
+
+    // 🧠 REAL RESTOCK LOGIC
+    // NEW product
+if (!prev && isInStock) {
+  await sendDiscord(product);
+}
+
+// RESTOCK
+if (
+  prev &&
+  !["IN_STOCK", "AVAILABLE", "LIMITED_STOCK"].includes(prev) &&
+  isInStock
+) {
   await sendDiscord(product);
 }
     // save latest status
