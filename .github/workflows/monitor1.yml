@@ -2,7 +2,7 @@ name: Monitor 1
 
 on:
   schedule:
-    - cron: "*/2 * * * *"
+    - cron: "* * * * *"
   workflow_dispatch:
 
 jobs:
