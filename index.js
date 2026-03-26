@@ -113,43 +113,41 @@ console.log("Walmart monitor started");
 
 async function monitorWalmart() {
   const cache = loadCache();
-  const ids = await getProductIds();
 
-  await Promise.all(ids.map(async (id) => {
-    const product = await checkProduct(id);
-    if (!product) return;
+  // 🔁 run multiple quick checks
+  for (let i = 0; i < 3; i++) {
+    console.log(`Walmart check ${i + 1}`);
 
-    const prev = cache[id];
+    const ids = await getProductIds();
 
-    const isInStock = ["IN_STOCK", "AVAILABLE", "LIMITED_STOCK"].includes(product.status);
+    await Promise.all(ids.map(async (id) => {
+      const product = await checkProduct(id);
+      if (!product) return;
 
-// NEW product
-if (!prev && isInStock) {
-  await sendDiscord(product);
-}
+      const prev = cache[id];
 
-// RESTOCK
-if (prev && !["IN_STOCK", "AVAILABLE", "LIMITED_STOCK"].includes(prev) && isInStock) {
-  await sendDiscord(product);
-}
+      const isInStock = ["IN_STOCK", "AVAILABLE", "LIMITED_STOCK"].includes(product.status);
 
-    // 🧠 REAL RESTOCK LOGIC
-    // NEW product
-if (!prev && isInStock) {
-  await sendDiscord(product);
-}
+      // NEW product
+      if (!prev && isInStock) {
+        await sendDiscord(product);
+      }
 
-// RESTOCK
-if (
-  prev &&
-  !["IN_STOCK", "AVAILABLE", "LIMITED_STOCK"].includes(prev) &&
-  isInStock
-) {
-  await sendDiscord(product);
-}
-    // save latest status
-    cache[id] = product.status;
-  }));
+      // RESTOCK
+      if (
+        prev &&
+        !["IN_STOCK", "AVAILABLE", "LIMITED_STOCK"].includes(prev) &&
+        isInStock
+      ) {
+        await sendDiscord(product);
+      }
+
+      cache[id] = product.status;
+    }));
+
+    // ⏱️ wait ~5 seconds between checks
+    await new Promise(res => setTimeout(res, 5000));
+  }
 
   saveCache(cache);
 }
