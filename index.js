@@ -101,7 +101,7 @@ return {
   name: data?.name,
   price: data?.priceInfo?.currentPrice?.price,
   image: data?.imageInfo?.thumbnailUrl,
-  status: data?.availabilityStatus,
+  status: fallbackStock ? "IN_STOCK" : data?.availabilityStatus,
   url: `https://www.walmart.ca/en/ip/${id}`
 };
 
