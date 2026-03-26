@@ -144,8 +144,8 @@ async function monitorPokemonCenter(cache, saveCache) {
       res.status === 403 ||
       res.status === 503 ||
       body.includes("checking your browser") ||
-body.includes("cf-challenge") ||
-body.includes("attention required")
+      body.includes("cf-challenge") ||
+      body.includes("attention required")
     ) {
       state = "security";
     }
@@ -153,64 +153,63 @@ body.includes("attention required")
     // ⏳ Queue detection
     else if (
       body.includes("queue") ||
-body.includes("line") ||
-body.includes("waiting room") ||
-body.includes("you are in line") ||
-body.includes("please wait")
+      body.includes("line") ||
+      body.includes("waiting room") ||
+      body.includes("you are in line") ||
+      body.includes("please wait")
     ) {
       state = "queue";
     }
 
     const prev = cache["pokemon_center"] || "normal";
 
-    // 🚨 ONLY alert on change (no spam)
     if (state !== prev) {
 
       if (state === "queue") {
-  await axios.post(process.env.WEBHOOK_URL, {
-    content: "@everyone",
-    embeds: [
-      {
-        title: "⏳ Pokémon Center Queue",
-        description: "Queue is live!",
-        color: 16776960,
-        footer: { text: "Pokemon Monitor" },
-        timestamp: new Date()
+        await axios.post(process.env.WEBHOOK_URL, {
+          content: "@everyone",
+          embeds: [
+            {
+              title: "⏳ Pokémon Center Queue",
+              description: "Queue is live!",
+              color: 16776960,
+              footer: { text: "Pokemon Monitor" },
+              timestamp: new Date()
+            }
+          ]
+        });
       }
-    ]
-  });
-}
 
-     if (state === "queue") {
-  await axios.post(process.env.WEBHOOK_URL, {
-    content: "@everyone",
-    embeds: [
-      {
-        title: "⏳ Pokémon Center Queue",
-        description: "Queue is live!",
-        color: 16776960,
-        footer: { text: "Pokemon Monitor" },
-        timestamp: new Date()
+      if (state === "security") {
+        await axios.post(process.env.WEBHOOK_URL, {
+          content: "@everyone",
+          embeds: [
+            {
+              title: "🔒 Pokémon Center High Security",
+              description: "Cloudflare protection is active",
+              color: 16711680,
+              footer: { text: "Pokemon Monitor" },
+              timestamp: new Date()
+            }
+          ]
+        });
       }
-    ]
-  });
-}
 
       if (state === "normal") {
-  await axios.post(process.env.WEBHOOK_URL, {
-    embeds: [
-      {
-        title: "✅ Pokémon Center Normal",
-        description: "Site is back to normal",
-        color: 65280,
-        footer: { text: "Pokemon Monitor" },
-        timestamp: new Date()
+        await axios.post(process.env.WEBHOOK_URL, {
+          embeds: [
+            {
+              title: "✅ Pokémon Center Normal",
+              description: "Site is back to normal",
+              color: 65280,
+              footer: { text: "Pokemon Monitor" },
+              timestamp: new Date()
+            }
+          ]
+        });
       }
-    ]
-  });
-}
+    }
 
-    // save state
     cache["pokemon_center"] = state;
     saveCache(cache);
 
